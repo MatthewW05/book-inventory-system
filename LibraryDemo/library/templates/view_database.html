@@ -1,0 +1,335 @@
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+<!-- jQuery library -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<!-- Latest compiled JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+<style>
+    /* General table styling */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed; /* Ensures consistent column widths */
+    }
+
+    table, th, td {
+        border: 1px solid black;
+    }
+
+    th, td {
+        padding: 15px;
+        text-align: center;
+        overflow: hidden; /* Prevent content overflow */
+        text-overflow: ellipsis; /* Truncate overflowing content */
+        white-space: nowrap; /* Prevent wrapping */
+    }
+
+    th {
+        background-color: #dadada;
+    }
+
+    /* Fixed header styling */
+    thead {
+        display: block;
+        width: calc(100% - 17px); /* Account for scrollbar width */
+    }
+
+    tbody {
+        overflow-y: scroll;
+        overflow-x: hidden;
+        display: block;
+        width: 100%;
+    }
+
+    tbody tr {
+        display: table;
+        table-layout: fixed;
+        width: 100%; /* Ensure rows match the header */
+    }
+
+
+    thead tr {
+        display: table;
+        table-layout: fixed;
+        width: 100%; /* Match header width with body */
+    }
+
+    tr:nth-child(even) {
+        background-color: white;
+    }
+
+    tr:nth-child(odd) {
+        background-color: #f2f2f2;
+    }
+
+    /* Container for scrollable table */
+    #container {
+        width: 80%;
+        height: 80vh;
+        position: relative;
+        top: 10%;
+        margin: 0 auto;
+        border-radius: 1vw;
+        padding: 2vh 2vw;
+        background-color: white;
+        box-shadow: 1vw 1vh 0px #EDEFF6;
+        padding-bottom: 25vh;
+        overflow: hidden;
+    }
+
+    /* Floating buttons */
+    #floatingButtons {
+        position: absolute;
+        bottom: 2vh;
+        left: 2vw;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    #floatingButtons .btn {
+        width: 150px;
+        text-align: center;
+    }
+
+    /* Prevent scrollbar from shifting content */
+    .scrollbar-placeholder {
+        width: 17px; /* Matches the width of the scrollbar */
+        display: inline-block;
+    }
+
+    .scrollbar-fix {
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .btn-danger {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+    }
+
+    .btn-danger:hover {
+        background-color: #c82333;
+        color: white;
+    }
+
+    /* New Book Form Row Alignment Fix */
+    #newBookForm td {
+        text-align: center;
+        max-width: calc((76vw - 20px) / 7); /* Distribute cells evenly */
+        min-width: calc((76vw - 20px) / 7); /* Distribute cells evenly */
+    }
+
+    /* Fix the input fields to match the table cell layout */
+    #newBookForm input {
+        width: 100%; /* Make inputs fill their cells */
+        padding: 8px; /* Padding for input */
+    }
+</style>
+<body style="background-color: #C1C7D7;">
+    {% if messages %}
+        <div class="alert alert-info" style="position: absolute; width: 100%; text-align: center;">
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+    <div id="container">
+        <div class="dropdown" style="margin-bottom: 15px;">
+            <!-- Button to show the dropdown -->
+            <button class="btn btn-primary dropdown-toggle" type="button" id="filterDropdown" data-toggle="dropdown" aria-expanded="false">
+                Filter Options
+            </button>
+        
+            <!-- Dropdown menu -->
+            <div class="dropdown-menu" aria-labelledby="filterDropdown" style="padding: 15px; width: 300px;">
+                <!-- Filter form -->
+                <form id="filterForm" method="GET" action="{% url 'view_database' %}">
+                    <div class="form-group">
+                        <label for="filterTitle">Title</label>
+                        <input type="text" name="filter_title" id="filterTitle" class="form-control" placeholder="Enter Title">
+                    </div>
+                    <div class="form-group">
+                        <label for="filterAuthor">Author</label>
+                        <input type="text" name="filter_author" id="filterAuthor" class="form-control" placeholder="Enter Author">
+                    </div>
+                    <div class="form-group">
+                        <label for="filterGenre">Genre</label>
+                        <select name="filter_genre" id="filterGenre" class="form-control">
+                            {% for genre_value, genre_label in GENRE_CHOICES %}
+                                <option value="{{ genre_value }}">{{ genre_label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="filterDate">Publication Date</label>
+                        <input type="date" name="filter_date" id="filterDate" class="form-control">
+                    </div>
+                    
+                    <!-- Sort Dropdown -->
+                    <div class="form-group">
+                        <label for="sortOptions">Sort By</label>
+                        <select name="sort_by" id="sortOptions" class="form-control">
+                            <option value="entry_id" {% if request.GET.sort_by == "entry_id" %}selected{% endif %}>Entry ID</option>
+                            <option value="title" {% if request.GET.sort_by == "title" %}selected{% endif %}>Title</option>
+                            <option value="author" {% if request.GET.sort_by == "author" %}selected{% endif %}>Author</option>
+                            <option value="genre" {% if request.GET.sort_by == "genre" %}selected{% endif %}>Genre</option>
+                            <option value="publication_date" {% if request.GET.sort_by == "publication_date" %}selected{% endif %}>Publication Date</option>
+                        </select>
+                    </div>
+
+                    <!-- Sort Direction Dropdown -->
+                    <div class="form-group">
+                        <label for="sortDirection">Sort Direction</label>
+                        <select name="sort_dir" id="sortDirection" class="form-control">
+                            <option value="asc" {% if request.GET.sort_dir == "asc" %}selected{% endif %}>Ascending</option>
+                            <option value="desc" {% if request.GET.sort_dir == "desc" %}selected{% endif %}>Descending</option>
+                        </select>
+                    </div>
+
+                    <!-- Apply Filters Button -->
+                    <button type="submit" class="btn btn-success">Apply</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Table displaying books -->
+        <table class="table">
+            <thead>
+                <tr class="scrollbar-fix">
+                    <th>Entry ID</th>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Genre</th>
+                    <th>Publication Date</th>
+                    <th>ISBN</th>
+                    <th>Action</th>
+                    <div class="scrollbar-placeholder"></div> <!-- Spacer for scrollbar -->
+                </tr>
+            </thead>
+            <tbody>
+                <!-- New Book Form Row (Initially Hidden) -->
+                <form action="{% url 'view_database' %}?{{ request.GET.urlencode }}" method="POST" onsubmit="return validateForm()">
+                    {% csrf_token %}
+                    <tr id="newBookForm" style="display: none;">
+                        <td></td>
+                        <td><input type="text" name="title" id="title" class="form-control" placeholder="Title"></td>
+                        <td><input type="text" name="author" id="author" class="form-control" placeholder="Author"></td>
+                        <td>
+                            <select name="genre" id="genre" class="form-control">
+                                <option value="">Select Genre</option>
+                                {% for genre_value, genre_label in GENRE_CHOICES %}
+                                    <option value="{{ genre_value }}">{{ genre_label }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td><input type="date" name="publication_date" id="publication_date" class="form-control"></td>
+                        <td><input type="text" name="isbn" id="isbn" class="form-control" placeholder="ISBN"></td>
+                        <td><button type="submit" class="btn btn-success">Confirm</button></td>
+                    </tr>
+                </form>
+
+                <!-- Existing Book Rows -->
+                {% for book in books %}
+                    <tr>
+                        <td>{{ book.entry_id }}</td>
+                        <td>{{ book.title }}</td>
+                        <td>{{ book.author }}</td>
+                        <td>{{ book.genre }}</td>
+                        <td>{{ book.publication_date }}</td>
+                        <td>{{ book.isbn }}</td>
+                        <td>
+                            <!-- Delete Button -->
+                            <form action="{% url 'delete_book' book.entry_id %}?{{ request.GET.urlencode }}" method="POST" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm"><span class="glyphicon glyphicon-trash"></span></button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Container for the buttons -->
+<div id="floatingButtons">
+    <!-- Button to Add New Book -->
+    <button id="addBookBtn" class="btn btn-primary">New Book</button>
+    <!-- Download CSV Button -->
+    <a href="{% url 'export_books_csv' %}?{% for key, value in request.GET.items %}{{ key }}={{ value }}{% if not forloop.last %}&{% endif %}{% endfor %}" class="btn btn-success">Download CSV</a>
+</div>
+
+    </div>
+</body>
+
+<script>
+    // Toggle the visibility of the Add New Book form
+    document.getElementById("addBookBtn").addEventListener("click", function() {
+        var formRow = document.getElementById("newBookForm");
+        // Toggle the form row visibility
+        if (formRow.style.display === "none") {
+            formRow.style.display = "table-row";  
+        } else {
+            formRow.style.display = "none";  // Hide it again if clicked
+        }
+    });
+
+    // Form validation function
+    function validateForm() {
+        // Get form values
+        var title = document.getElementById("title").value;
+        var author = document.getElementById("author").value;
+        var genre = document.getElementById("genre").value;
+        var publicationDate = document.getElementById("publication_date").value;
+        var isbn = document.getElementById("isbn").value;
+        
+        // Validation checks
+        if (!title || !author || !genre || !publicationDate) {
+            alert("All fields are required.");
+            return false;
+        }
+        if (isbn.length !== 13) {
+            alert("ISBN must be 13 characters long.");
+            return false;
+        }
+        if (!/^\d+$/.test(isbn)) { // Check if ISBN contains only digits
+            alert("ISBN must contain only digits.");
+            return false;
+        }
+
+        // If validation passes, allow form submission
+        return true;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const container = document.getElementById("container");
+        const tableBody = document.querySelector("tbody");
+        const floatingButtons = document.getElementById("floatingButtons");
+
+        function adjustTableHeight() {
+            // Get the container's height
+            const containerHeight = container.offsetHeight;
+
+            const height = window.innerHeight;
+
+            // Get the height of the floating buttons
+            const buttonsHeight = floatingButtons.offsetHeight;
+
+            // Calculate the available height for tbody
+            const availableHeight = containerHeight - buttonsHeight*3 - height*0.02; // Adjust for margins/padding
+
+            // Apply the calculated height to tbody
+            tableBody.style.maxHeight = `${availableHeight}px`;
+        }
+
+        // Run on page load
+        adjustTableHeight();
+
+        // Adjust on window resize
+        window.addEventListener("resize", adjustTableHeight);
+    });
+
+</script>
