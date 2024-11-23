@@ -35,10 +35,9 @@ Before running this project, make sure you have the following installed:
     pip install -r requirements.txt
     ```
 
-3. Apply database migrations:
-
+3. Navigate to the inner project:
     ```bash
-    python manage.py migrate
+    cd LibraryDemo
     ```
 
 4. *(Optional)* Populate the database with sample books:
@@ -47,13 +46,19 @@ Before running this project, make sure you have the following installed:
     ```
     > *Note*: This step will generate approximately 100 random book entries for testing purposes.
 
-5. Start the development server:
+5. Apply database migrations:
+
+    ```bash
+    python manage.py migrate
+    ```
+
+6. Start the development server:
 
     ```bash
     python manage.py runserver
     ```
 
-6. Visit the application in your browser at `http://localhost:8000/view-database`.
+7. Visit the application in your browser at `http://localhost:8000/view-database`.
 
 ### Usage
 
